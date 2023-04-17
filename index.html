@@ -9,9 +9,13 @@
 	<!-- Include Bootstrap JS -->
 	<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
     <style>
+        :root{
+            --body-bg: #1c1e24;
+            --body-color: #f8f9fa;
+        }
 		body {
-			background-color: #1c1e24;
-			color: #f8f9fa;
+			background-color: var(--body-bg);
+			color: var(--body-color);
 		}
         .container {
             padding-top: 2rem;
@@ -26,6 +30,28 @@
             padding-top: 3rem;
             margin: auto;
         }
+        .custom-center-60rem{
+            max-width: 60rem;
+            padding-top: 3rem;
+            margin: auto;
+        }
+        .accordion-item{
+            background-color: var(--body-bg);
+        }
+        .accordion-button.collapsed{
+            background-color: #0d6efd;
+			color: var(--body-color);
+        }
+        .accordion-button:not(.collapsed){
+            background-color: #0d6efd;
+			color: var(--body-color);
+        }
+        .accordion-button.collapsed::after, .accordion-button:not(.collapsed):after{
+             background-image: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%23ffffff'><path fill-rule='evenodd' d='M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z'/></svg>") !important;
+        }
+        #original-matrix{
+            color: var(--body-color);
+        }
 	</style>
 
 </head>
@@ -39,7 +65,7 @@
             <button class="nav-link" id="pills-profile-network-divide-tab" data-bs-toggle="pill" data-bs-target="#pills-network-divide" type="button" role="tab" aria-controls="pills-network-divide" aria-selected="false">Dividing specific network</button>
           </li>
           <li class="nav-item" role="presentation">
-            <button class="nav-link" id="pills-rule-translate-tab" data-bs-toggle="pill" data-bs-target="#pills-rule-translate" type="button" role="tab" aria-controls="pills-rule-translate" aria-selected="false">Rule translator</button>
+            <button class="nav-link" id="pills-rule-translate-tab" data-bs-toggle="pill" data-bs-target="#pills-rule-translate" type="button" role="tab" aria-controls="pills-rule-translate" aria-selected="false">Rule translator (Wrong)</button>
           </li>
         </ul>
         <div class="tab-content" id="pills-tabContent">
@@ -81,7 +107,7 @@
                     <textarea class="form-control" id="divider-result" rows="3"></textarea>
                 </div>
           </div>
-          <div class="tab-pane fade custom-center-40rem justify-content-center" id="pills-rule-translate" role="tabpanel" aria-labelledby="pills-rule-translate-tab">
+          <div class="tab-pane fade custom-center-60rem justify-content-center" id="pills-rule-translate" role="tabpanel" aria-labelledby="pills-rule-translate-tab">
                 <form id="rule-translator-form">
                   <div class="mb-3">
                     <label for="original_subnets" class="form-label">Matrix as JSON</label>
@@ -90,6 +116,22 @@
                   <button type="submit" class="btn btn-primary mb-4">Submit</button>
                 </form>
                 <div class="mb-3">
+                    <div class="accordion" id="accordionExample">
+                        <div class="accordion-item">
+                            <h2 class="accordion-header" id="headingOne">
+                              <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
+                                Show original matrix
+                              </button>
+                            </h2>
+                            <div id="collapseOne" class="accordion-collapse collapse" aria-labelledby="headingOne" data-bs-parent="#accordionExample">
+                              <div class="accordion-body" id="table-container">
+
+                              </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="mb-3">
                     <label for="separator-result" class="form-label">Result</label>
                     <textarea class="form-control" id="translator-result" rows="3"></textarea>
                 </div>
@@ -97,6 +139,40 @@
         </div>
 	</div>
     <script>
+        function make_table(jsonData){
+            let old = document.getElementById('original-matrix');
+            let container = document.getElementById("table-container");
+
+            if (old != null){
+                container.removeChild(old);
+            }
+
+            let table = document.createElement("table");
+            table.setAttribute("id", "original-matrix");
+            table.setAttribute("class", "table");
+
+            let headers = Object.keys(jsonData[0]);
+		    let headerRow = document.createElement("tr");
+
+            for (let i = 0; i < headers.length; i++) {
+			    let headerCell = document.createElement("th");
+			    headerCell.textContent = headers[i];
+			    headerRow.appendChild(headerCell);
+		    }
+		    table.appendChild(headerRow);
+
+		    for (let i = 0; i < jsonData.length; i++) {
+			    let row = document.createElement("tr");
+			    for (let j = 0; j < headers.length; j++) {
+				    let cell = document.createElement("td");
+				    cell.textContent = jsonData[i][headers[j]];
+				    row.appendChild(cell);
+			    }
+			    table.appendChild(row);
+            }
+		container.appendChild(table);
+
+        }
         const form_separator = document.querySelector('#network-separation-form');
         form_separator.addEventListener('submit', async (event) => {
           event.preventDefault();
@@ -112,7 +188,7 @@
             },
             body: JSON.stringify(data)
           };
-          const response = await fetch('http://127.0.0.1:5000/networkseparate', options);
+          const response = await fetch('/networkseparate', options);
           const json = await response.json();
           document.getElementById('separator-result').innerHTML = json['result'];
         });
@@ -132,7 +208,7 @@
             },
             body: JSON.stringify(data)
           };
-          const response = await fetch('http://127.0.0.1:5000/networkdivide', options);
+          const response = await fetch('/networkdivide', options);
           const json = await response.json();
           document.getElementById('divider-result').innerHTML = json['result'];
         });
@@ -142,6 +218,15 @@
           event.preventDefault();
           const formData = new FormData(form_translator);
 
+          var jsonData = [
+			{ "name": "John Doe", "age": 30, "gender": "Male" },
+			{ "name": "Jane Doe", "age": 25, "gender": "Female" },
+			{ "name": "Bob Smith", "age": 45, "gender": "Male" }
+		];
+          //make_table(formData.get('rules'));
+            alert(typeof formData.get('rules'))
+            make_table(JSON.parse(formData.get('rules')));
+
           const options = {
             method: 'POST',
             headers: {
@@ -149,7 +234,7 @@
             },
             body: formData.get('rules')
           };
-          const response = await fetch('http://127.0.0.1:5000/rulecreate', options);
+          const response = await fetch('/rulecreate', options);
           const json = await response.json();
           // alert(json['result'])
 
@@ -161,7 +246,6 @@
                 output += '\n'
 
             }
-            alert(output)
           document.getElementById('translator-result').innerHTML = output;
         });
     </script>
