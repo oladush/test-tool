@@ -1,9 +1,4 @@
-#    /\________/\
-#   /,,◕　⋏　◕,,\   usage: python3 subnets_disallow.py -o 0.0.0.0/0 -e 192.168.0.0/24 8.8.8.8/32
-
 import ipaddress as ip
-from argparse import ArgumentParser
-
 
 def remove_excess(subnets_: list[ip.IPv4Network]) -> list[ip.IPv4Network]:
     # remove duplicates
@@ -75,27 +70,3 @@ def separate(orig, excl):
     res = exclude(orig_merged, excl_merged)
 
     return res
-
-
-if __name__ == "__main__":
-    parser = ArgumentParser(
-        prog='subnets_disallow.py',
-        description="Exclude some ip or ip ranges from subnets",
-    )
-    parser.add_argument('-o', nargs='+', help='enter here original subnets', metavar='subnet', required=True, dest='orig')
-    parser.add_argument('-e', nargs='+', help='enter here subnets for exclude', metavar='subnet', required=True, dest='excl')
-
-    args = parser.parse_args()
-
-    print('original subnets:\n', ', '.join(args.orig))
-    print('subnets for exclude:\n', ', '.join(args.excl))
-
-    orig_blocks = remove_excess([ip.ip_network(s) for s in args.orig])
-    excl_blocks = remove_excess([ip.ip_network(s) for s in args.excl])
-
-    orig_merged = try_merge_all(orig_blocks)
-    excl_merged = try_merge_all(excl_blocks)
-
-    res = exclude(orig_merged, excl_merged)
-
-    print('result:\n', ', '.join([str(s) for s in sorted(res)]))
